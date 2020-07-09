@@ -3,8 +3,8 @@
 
 ## Addressing Manual tests
 
-Some of the checks described by the security guidance **cannot** be automated and hence are manaul.<br>
-Such checks are to be setup with a skip statement to communicate to the reviwers that these tests are manual.
+Some of the checks described by the security guidance **cannot** be automated and hence are manual.<br>
+Such checks are to be setup with a skip statement to communicate to the reviewers that these tests are manual.
 
 *Skip statement for manual controls*
 ```
@@ -13,6 +13,14 @@ Such checks are to be setup with a skip statement to communicate to the reviwers
     end
 ```
 Controls with skip statements are bucketed as `Not Reviewed` on Heimdall and inspec_tools and hence separated from actual failures.
+
+## Use InSpec resources wherever applicable
+
+InSpec resource as modules within the InSpec core that are able to perform queries on a specific target platform, application, or a files.
+
+https://www.inspec.io/docs/reference/resources/
+
+Favor the use of Inspec target specific resources wherever possible over using a shell command with command resource. Tests written using InSpec resources tend be less brittle and support better documentation.
 
 ## Use Input Values wherever applicable
 
@@ -182,9 +190,23 @@ If any files on the system do not have an assigned group, this is a finding."
 
 ```
 
+## Check for "Profile Error"
+
+If an Inspec control execution does not reach a describe block or if a runtime exception is encountered, the control will be bucketed as "Profile Errors" on `Heimdall` and `inspec_tools`. 
+
+Review you InSpec results JSON in Heimdall to verify there are no "Profile Errors" present.
+
+The only acceptable "Profile Errors" are the ones resulted from incorrect privileges during the InSpec run.
+
+## Check for risky commands (e.g. rm, del, purge, etc.)
+
+Validate that risky commands are not being used on the profile that could perform damage or change to the target.
+
 ## Put in place a profile review process
 
 Ensure a profile review process is in place to ensure the best practices are adhered to during the development for the profiles.
 A template for profile review used by MITRE is available here.
 
 https://github.com/mitre/microsoft-iis-8.5-server-stig-baseline/blob/master/Review.md
+
+
