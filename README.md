@@ -1,18 +1,18 @@
 # InSpec Profile Coding Conventions
 
 
-## Addressing Manual tests
+## Addressing Tests that can only be performed Manually at this time
 
-Some of the checks described by the security guidance **cannot** be automated and hence are manual.<br>
-Such checks are to be setup with a skip statement to communicate to the reviewers that these tests are manual.
+Sometimes, tests described by the security guidance **cannot** really be automated well, and hence are can only be tested "manually", i.e. though human examination and/or interview.<br>
+Such tests are to be setup with a skip statement to communicate to the reviewers that these tests are manual.
 
-*Skip statement for manual controls*
+*Sample describe code for manual tests*
 ```
-    describe 'This control is skipped since this is a manual test' do
-      skip 'This control is skipped since this is a manual test'
+    describe 'This test can only be performed by manual examination or interview at this time.' do
+      skip 'This test can only be performed by manual examination or interview at this time.'
     end
 ```
-Controls with skip statements are bucketed as `Not Reviewed` on Heimdall and inspec_tools and hence separated from actual failures.
+Tests configured this way are counted as `Not Reviewed` on Heimdall and inspec_tools and hence separated from actual failures. It allows the users to spot these guidance items as separate items to review manually.
 
 ## Use InSpec resources wherever applicable
 
@@ -22,7 +22,7 @@ https://www.inspec.io/docs/reference/resources/
 
 Favor the use of Inspec target specific resources wherever possible over using a shell command with command resource. Tests written using InSpec resources tend be less brittle and support better documentation.
 
-## Use Input Values wherever applicable
+## Use Input Values wherever applicable (i.e., avoid hard-coding values and parameters)
 
 Favor the use input values to whenever applicable to pass run time values and compliance parameters over hard-coding values to the test.
 This will allow for dynamic testing as well as the allow you to test against custom compliance requirements for your organization.
@@ -41,7 +41,7 @@ More details:
 https://www.inspec.io/docs/reference/inputs/
 
 ## Sensitive resources
-In some scenarios, you may be writing checks that involve resources with sensitive content, such as a file resource. 
+In some scenarios, you may be writing tests that involve resources with sensitive content, such as a file resource. 
 In case of failures, you may desire to suppress output. Do this task by adding the :sensitive flag to the resource definition:
 
 ```
@@ -52,13 +52,13 @@ end
 
 ## Reporting Optimization
 
-Tests should be designed in such a way that reporting of the status of the check be as descriptive of the intent of the test. 
-This will avoid the need for checking the test DSL code or the control meta-data to make sense of the results.
+Tests should be designed in such a way that reporting of the status of the test be as descriptive of the intent of the test. 
+This will avoid the need for checking the test DSL code or the test meta-data to make sense of the results.
 
 If you are using target specific resources instead of a shell script, Inpsec already provides meaningfully descriptive status reports.
 However if a command resource is used to perform query using a shell script, the `subject` feature can be used to allow better reporting.
 
-The following example checks to validate the trusted users in the docker group on the target host demoing non-optimized and optimized reporting.
+The following example tests to validate the trusted users in the docker group on the target host demoing non-optimized and optimized reporting.
 
 *Non-Optimized Reporting*
 ```
@@ -93,18 +93,18 @@ Report generated:
 
 ```
 
-## Non Applicable Controls
+## Non Applicable Test
 
-If a specific control is deemed to be `Non-applicable` on the target, are coded with an `impact 0`. 
+If a specific test is deemed to be `Non-applicable` on the target, it is coded with an `impact 0`. 
 
-This is so that the control could still return the results of the test, yet the failure **does not** count against the overall compliance score.
+This is so that the test could still return the results of the test, yet the failure **does not** count against the overall compliance score.
 
-Controls with `impact 0` are bucketed as `Non-Applicable` in `Heimdall` and `inspec_tools` compliance checker and stigchecklist converted 
+Tests with `impact 0` are counted as `Non-Applicable` in `Heimdall` and `inspec_tools` compliance checker and stigchecklist converted 
 
 
 ## Conditional Non Applicability
 
-If the check text of the Control guidance describes a condition for non-applicability, use an if condition to update impact based on the condition.
+If the check text of the guidance describes a condition for non-applicability, use an if condition to update impact based on the condition.
 
 *DISA RHEL7 STIG Inspec Profile
 V-71893:*
@@ -130,7 +130,7 @@ https://github.com/simp/inspec-profile-disa_stig-el7/blob/52fd7c3cd647e8b7d50478
 
 ## OS/Platform based execution
 
-If a controls needs to executed diffrently or impact updated based on Virtualization or OS the following resource should be used.
+If a tests needs to executed diffrently or impact updated based on Virtualization or OS the following resource should be used.
 
 - [virtualization](https://www.inspec.io/docs/reference/resources/virtualization/) : Return the virtualization details of the target
 - [os](https://www.inspec.io/docs/reference/resources/os/) : Return the OS details of the target
@@ -147,10 +147,10 @@ end
 
 ## Cover edge conditions where test might not run where describe is within a loop/condition
 
-If the InSpec DSL describe blocks are contained within a condition block or a loop, there is a chance that the execution does not reach the describe block and hence **no results will be returned** for the control.
-These controls will be bucketed as `Profile Errors` on Heimdall.
+If the InSpec DSL describe blocks are contained within a condition block or a loop, there is a chance that the execution does not reach the describe block and hence **no results will be returned** for the test.
+These tests will be counted as `Profile Errors` on Heimdall.
 
-Ensure that controls cover such cases as in the example shown below.
+Ensure that tests cover such cases as in the example shown below.
 
 *Ref: https://github.com/mitre/cis-aws-foundations-baseline/blob/9409f7a3a87337961db371a101929f569e981972/controls/cis-aws-foundations-1.23.rb#L86-L98*
 ```
@@ -163,17 +163,17 @@ Ensure that controls cover such cases as in the example shown below.
   end
 
   if aws_iam_access_keys.entries.empty?
-    describe 'Control skipped because no iam access keys were found' do
-      skip 'This control is skipped since the aws_iam_access_keys resource returned an empty access key list'
+    describe 'Test skipped because no iam access keys were found' do
+      skip 'This test is skipped since the aws_iam_access_keys resource returned an empty access key list'
     end
   end
 ```
 
-The `inspec check` command can be useful in tracking controls with no tests or unexposed describe blocks.
+The `inspec check` command can be useful in tracking guidance with no tests or unexposed describe blocks.
 
 ## Run Optimization
 
-In cases compliance checks has to be performed over a very large array set, such as file properties of all the files in a directory, there is chance the control run takes an inordinate amount of to complete.
+In cases compliance checks has to be performed over a very large array set, such as file properties of all the files in a directory, there is chance the test run takes an inordinate amount of to complete.
 In such cases it is recommended to see if a shell command on the target can be leveraged to speed up the test.
 
 *https://github.com/simp/inspec-profile-disa_stig-el7/blob/52fd7c3cd647e8b7d50478dbb6ca7bdcb7fc35e4/controls/V-72009.rb#L38-L43*
@@ -192,7 +192,7 @@ If any files on the system do not have an assigned group, this is a finding."
 
 ## Check for "Profile Error"
 
-If an Inspec control execution does not reach a describe block or if a runtime exception is encountered, the control will be bucketed as "Profile Errors" on `Heimdall` and `inspec_tools`. 
+If an Inspec test execution does not reach a describe block or if a runtime exception is encountered, the test will be counted as "Profile Errors" on `Heimdall` and `inspec_tools`. 
 
 Review you InSpec results JSON in Heimdall to verify there are no "Profile Errors" present.
 
