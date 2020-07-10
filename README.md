@@ -16,11 +16,12 @@ Tests configured this way are counted as `Not Reviewed` on Heimdall and inspec_t
 
 ## Use InSpec resources wherever applicable
 
-InSpec resource as modules within the InSpec core that are able to perform queries on a specific target platform, application, or a files.
+When writing InSpec code to query different types of components, favor the use of Inspec resources wherever possible, instead of using a shell command with command resource. Tests written using InSpec resources tend be more reliable and support better documentation.
+
+InSpec resources are modules within the InSpec core that are able to perform queries on a specific target platform, application, or a files.
 
 https://www.inspec.io/docs/reference/resources/
 
-Favor the use of Inspec target specific resources wherever possible over using a shell command with command resource. Tests written using InSpec resources tend be less brittle and support better documentation.
 
 ## Use Input Values wherever applicable (i.e., avoid hard-coding values and parameters)
 
@@ -40,7 +41,7 @@ Input values can also be setup to pull values for ENV vars using ERB reference, 
 More details:
 https://www.inspec.io/docs/reference/inputs/
 
-## Sensitive resources
+## Handling Sensitive Data with InSpec Resources
 In some scenarios, you may be writing tests that involve resources with sensitive content, such as a file resource. 
 In case of failures, you may desire to suppress output. Do this task by adding the :sensitive flag to the resource definition:
 
@@ -50,7 +51,7 @@ describe file('/tmp/mysecretfile'), :sensitive do
 end
 ```
 
-## Reporting Optimization
+## Ensure that Results Reporting is Descriptive
 
 Tests should be designed in such a way that reporting of the status of the test be as descriptive of the intent of the test. 
 This will avoid the need for checking the test DSL code or the test meta-data to make sense of the results.
@@ -60,7 +61,7 @@ However if a command resource is used to perform query using a shell script, the
 
 The following example tests to validate the trusted users in the docker group on the target host demoing non-optimized and optimized reporting.
 
-*Non-Optimized Reporting*
+*Example of Vague Reporting*
 ```
 describe  group('docker').members.split(',') do
   it { should be_in input('trusted_docker_users') }
@@ -76,7 +77,7 @@ Report generated:
 ```
 *Note that above above report provides no context on the test being performed.*
 
-*Report Optimized test:*
+*Example of More Descriptive Reporting:*
 ```
 describe 'Trusted Docker group members' do
   subject { group('docker').members.split(',') }
@@ -93,18 +94,17 @@ Report generated:
 
 ```
 
-## Non Applicable Test
+## Handling "Not Applicable" Tests
 
-If a specific test is deemed to be `Non-applicable` on the target, it is coded with an `impact 0`. 
+Sometimes, guidance will cite situations whereby a test is not applicable. For example, the following test to require the display of the graphical logon warning banner is deemed not applicable when the graphical interface is not installed:
+
+These types of situations are coded with an `impact 0`. 
 
 This is so that the test could still return the results of the test, yet the failure **does not** count against the overall compliance score.
 
 Tests with `impact 0` are counted as `Non-Applicable` in `Heimdall` and `inspec_tools` compliance checker and stigchecklist converted 
 
-
-## Conditional Non Applicability
-
-If the check text of the guidance describes a condition for non-applicability, use an if condition to update impact based on the condition.
+Hence, if the check text of the guidance describes a condition for non-applicability, use an if condition to update impact based on the condition:
 
 *DISA RHEL7 STIG Inspec Profile
 V-71893:*
@@ -128,9 +128,9 @@ https://github.com/simp/inspec-profile-disa_stig-el7/blob/52fd7c3cd647e8b7d50478
   end
 ```
 
-## OS/Platform based execution
+## Handling Virtualized vs not situations:
 
-If a tests needs to executed diffrently or impact updated based on Virtualization or OS the following resource should be used.
+If a tests needs to executed differently or change the impact based on whether the target is virtualized or not, the following resources should be used:
 
 - [virtualization](https://www.inspec.io/docs/reference/resources/virtualization/) : Return the virtualization details of the target
 - [os](https://www.inspec.io/docs/reference/resources/os/) : Return the OS details of the target
@@ -145,10 +145,13 @@ else
 end
 ```
 
-## Cover edge conditions where test might not run where describe is within a loop/condition
+## "Contain the Code!": 
 
-If the InSpec DSL describe blocks are contained within a condition block or a loop, there is a chance that the execution does not reach the describe block and hence **no results will be returned** for the test.
-These tests will be counted as `Profile Errors` on Heimdall.
+Contain Edge Cases/Conditions where an InSpec ("describe block") test might not run:
+
+For example, if the InSpec DSL describe blocks are contained within a condition block or a loop, there is a chance that the execution does not reach the describe block and hence **no results will be returned** for the test.
+
+If tests are not contained, the "results", or lack thereof, will be marked as `Profile Errors` on Heimdall.
 
 Ensure that tests cover such cases as in the example shown below.
 
